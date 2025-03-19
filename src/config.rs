@@ -189,7 +189,11 @@ impl Config {
 
         let devnet_config = match envy::prefixed("DEVNET_").from_env::<NetworkConfig>() {
             Ok(config) => {
-                tracing::info!("Devnet configuration loaded successfully");
+                if config.devnet_name.is_none() || config.devnet_name.as_ref().unwrap().is_empty() {
+                    tracing::warn!("Devnet configuration loaded, but `devnet_name` is missing.");
+                } else {
+                    tracing::info!("Devnet configuration loaded successfully with devnet_name: {}", config.devnet_name.as_ref().unwrap());
+                }
                 Some(config)
             }
             Err(err) => {
