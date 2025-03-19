@@ -265,12 +265,19 @@ impl Config {
 
 impl NetworkConfig {
     /// Check if configuration is set
-    pub fn is_valid(&self) -> bool {
-        !self.core_rpc_user.is_empty()
+    pub fn is_valid(&self, network: Network) -> bool {
+        let is_valid_base = !self.core_rpc_user.is_empty()
             && !self.core_rpc_password.is_empty()
             && self.core_rpc_port != 0
             && !self.dapi_addresses.is_empty()
-            && Uri::from_str(&self.insight_api_url).is_ok()
+            && Uri::from_str(&self.insight_api_url).is_ok();
+    
+        // Ensure `devnet_name` is set if the network is Devnet
+        if network == Network::Devnet {
+            return is_valid_base && self.devnet_name.is_some() && !self.devnet_name.as_ref().unwrap().is_empty();
+        }
+    
+        is_valid_base
     }
 
     /// List of DAPI addresses
