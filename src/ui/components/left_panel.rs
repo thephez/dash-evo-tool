@@ -6,7 +6,7 @@ use crate::ui::RootScreenType;
 use dash_sdk::dashcore_rpc::dashcore::Network;
 use dash_sdk::dpp::version::v9::PROTOCOL_VERSION_9;
 use eframe::epaint::Margin;
-use egui::{Color32, Context, Frame, ImageButton, RichText, SidePanel, TextureHandle};
+use egui::{Color32, Context, Frame, ImageButton, RichText, SidePanel, TextureHandle, ScrollArea};
 use rust_embed::RustEmbed;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
@@ -93,7 +93,10 @@ pub fn add_left_panel(
                 .corner_radius(egui::CornerRadius::same(Shape::RADIUS_LG))
                 .shadow(Shadow::elevated())
                 .show(ui, |ui| {
-                    ui.vertical_centered(|ui| {
+                    ScrollArea::vertical()
+                        .max_height(ui.available_height())
+                        .show(ui, |ui| {
+                            ui.vertical_centered(|ui| {
                         for (label, screen_type, icon_path) in buttons.iter() {
                             if !check_root_screen_access(app_context, screen_type) {
                                 continue; // Skip this button if access is denied
@@ -202,7 +205,8 @@ pub fn add_left_panel(
                             }
                         });
                     });
-                }); // Close the island frame
+                });
+            }); // Close the island frame
         });
 
     action
