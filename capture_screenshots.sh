@@ -84,7 +84,7 @@ click_ui_element() {
             local target_y=$topbar_y
             ;;
         "screen_sidebar")
-            local base_x=$((X + 170))
+            local base_x=$((X + 140))
             local base_y=$((Y + 140))
             local btn_height=35
             local btn_gap=16
@@ -97,6 +97,8 @@ click_ui_element() {
                 "past_contests")  local idx=1 ;;
                 "my_usernames")  local idx=2 ;;
                 "scheduled_votes")  local idx=3 ;;
+                # Network
+                "advanced_settings")  local idx=3 ;;
                 *) echo "Unknown screen_sidebar element: $element"; return 1 ;;
             esac
             local target_x=$base_x
@@ -197,6 +199,12 @@ take_screenshot "06_tools_screen"
 click_ui_element "left_sidebar" "network"
 take_screenshot "07_network_chooser_screen"
 
+    # DPNS - Past contestants
+    click_ui_element "screen_sidebar" "advanced_settings"
+    for i in {1..3}; do
+        xdotool click 5
+    done
+    take_screenshot "07b_network_chooser_advanced_settings"
 
 xdotool key Escape
 sleep 1
