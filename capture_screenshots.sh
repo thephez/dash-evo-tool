@@ -61,45 +61,47 @@ click_menu_item() {
     # If a window was found, get its geometry
     if [ -n "$window_id" ]; then
         eval $(xdotool getwindowgeometry --shell "$window_id")
-        echo "Window ID: $window_id"
+        # echo "Window ID: $window_id"
         echo "Position: $X,$Y"
         echo "Size: $WIDTH x $HEIGHT"
     else
         echo "No window found with name: $APP_NAME"
     fi
+
     # Calculate left panel icon positions (based on UI analysis)
     # Left panel is typically 60px wide with icons spaced ~50px apart vertically
     local left_panel_x=$((X + 45))  # Center of left panel
     local start_y=$((Y + 80))       # Start of icon area
+    local ICON_VERTICAL_SPACING=75
     
     case $item_name in
         "identities")
             # Identities (1st icon)
-            xdotool mousemove $left_panel_x $((start_y + 75)) click 1
+            xdotool mousemove $left_panel_x $((start_y + 0)) click 1
             ;;
-        "documents")
+        "contracts")
             # Contracts (2nd icon)  
-            xdotool mousemove $left_panel_x $((start_y + 150)) click 1
+            xdotool mousemove $left_panel_x $((start_y + (ICON_VERTICAL_SPACING * 1))) click 1
             ;;
         "tokens")
             # Tokens (3rd icon)
-            xdotool mousemove $left_panel_x $((start_y + 225)) click 1
+            xdotool mousemove $left_panel_x $((start_y + (ICON_VERTICAL_SPACING * 2))) click 1
             ;;
-        "contests")
+        "dpns")
             # DPNS (4th icon)
-            xdotool mousemove $left_panel_x $((start_y + 300)) click 1
+            xdotool mousemove $left_panel_x $((start_y + (ICON_VERTICAL_SPACING * 3))) click 1
             ;;
         "wallets")
             # Wallets (5th icon)
-            xdotool mousemove $left_panel_x $((start_y + 375)) click 1
+            xdotool mousemove $left_panel_x $((start_y + (ICON_VERTICAL_SPACING * 4))) click 1
             ;;
         "tools")
             # Tools/Proof Log (6th icon)
-            xdotool mousemove $left_panel_x $((start_y + 450)) click 1
+            xdotool mousemove $left_panel_x $((start_y + (ICON_VERTICAL_SPACING * 5))) click 1
             ;;
         "network")
             # Network Chooser (7th icon)
-            xdotool mousemove $left_panel_x $((start_y + 525)) click 1
+            xdotool mousemove $left_panel_x $((start_y + (ICON_VERTICAL_SPACING * 6))) click 1
             ;;
     esac
     
@@ -118,36 +120,36 @@ fi
 echo "Starting automated screenshot sequence..."
 
 # Main screen
-take_screenshot "01_main_screen"
+# take_screenshot "01_main_screen"
 
 # Navigate through different screens using automation
 echo "Capturing Identities screen..."
 click_menu_item "identities"
-take_screenshot "02_identities_screen"
+take_screenshot "01_identities_screen"
 
-echo "Capturing Document Query screen..."
-click_menu_item "documents"
-take_screenshot "03_document_query_screen"
+echo "Capturing Contract screen..."
+click_menu_item "contracts"
+take_screenshot "02_contract_screen"
 
 echo "Capturing Token Balances screen..."
 click_menu_item "tokens"
-take_screenshot "04_token_balances_screen"
+take_screenshot "03_token_balances_screen"
 
-echo "Capturing DPNS Contests screen..."
-click_menu_item "contests"
-take_screenshot "05_dpns_contests_screen"
+echo "Capturing DPNS screen..."
+click_menu_item "dpns"
+take_screenshot "04_dpns_contests_screen"
 
 echo "Capturing Wallets screen..."
 click_menu_item "wallets"
-take_screenshot "06_wallets_screen"
+take_screenshot "05_wallets_screen"
 
 echo "Capturing Tools screen..."
 click_menu_item "tools"
-take_screenshot "07_tools_screen"
+take_screenshot "06_tools_screen"
 
 echo "Capturing Network Chooser screen..."
 click_menu_item "network"
-take_screenshot "08_network_chooser_screen"
+take_screenshot "07_network_chooser_screen"
 
 # # Try to capture some dialog examples
 # echo "Attempting to capture dialog examples..."
