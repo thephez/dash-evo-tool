@@ -4,8 +4,8 @@
 # Uses xdotool and wmctrl for GUI automation
 
 SCREENSHOT_DIR="./screenshots"
-DELAY=0.15  # seconds between actions
-FOCUS_APP_DELAY=0.2
+DELAY=0.15  # seconds between actions (reduce for faster runs, increase if UI lags)
+FOCUS_APP_DELAY=0.2  # seconds to wait after focusing app to avoid race conditions
 APP_NAME="Dash Evo Tool v0.9.0-preview.4"
 
 # Create screenshots directory
@@ -53,9 +53,9 @@ click_ui_element() {
 
     case "$zone" in
         "left_sidebar")
-            local base_x=$((X + 45))
-            local base_y=$((Y + 80))
-            local vertical_spacing=75
+            local base_x=$((X + 45))   # 45px offset from window left edge to align with sidebar
+            local base_y=$((Y + 80))   # 80px offset from window top to align with first sidebar item
+            local vertical_spacing=75  # Vertical distance in pixels between sidebar buttons
             case "$element" in
                 "identities")   local idx=0 ;;
                 "contracts")    local idx=1 ;;
@@ -70,35 +70,36 @@ click_ui_element() {
             local target_y=$((base_y + idx * vertical_spacing))
             ;;
         "topbar")
-            local topbar_y=$((Y + 10))
+            local topbar_y=$((Y + 10))   # 10px from window top to align with top bar
             case "$element" in
-                "group_actions") local target_x=$((X + 850)) ;;
-                "contracts")     local target_x=$((X + 975)) ;;
-                "documents")     local target_x=$((X + 1090)) ;;
-                "add_token")     local target_x=$((X + 950)) ;;
-                "refresh")       local target_x=$((X + 1065)) ;;
+                # target_x is the pixel offset from window left edge
+                "group_actions") local target_x=$((X + 850)) ;;  # X+850: group actions button location
+                "contracts")     local target_x=$((X + 975)) ;;  # X+975: contracts tab/button
+                "documents")     local target_x=$((X + 1090)) ;; # X+1090: documents tab/button
+                "add_token")     local target_x=$((X + 950)) ;;  # X+950: add token button
+                "refresh")       local target_x=$((X + 1065)) ;; # X+1065: token refresh button
                 # DPNS
-                "register_name")     local target_x=$((X + 950)) ;;
+                "register_name")     local target_x=$((X + 950)) ;; # X+950: DPNS register name button
                 *) echo "Unknown topbar element: $element"; return 1 ;;
             esac
             local target_y=$topbar_y
             ;;
         "screen_sidebar")
-            local base_x=$((X + 140))
-            local base_y=$((Y + 140))
-            local btn_height=35
-            local btn_gap=16
+            local base_x=$((X + 140))   # 140px from window left edge to reach screen sidebar
+            local base_y=$((Y + 140))   # 140px from window top to first sidebar button in this zone
+            local btn_height=35         # Button height in sidebar
+            local btn_gap=16            # Gap between sidebar buttons
             case "$element" in
                 "my_tokens")      local idx=0 ;;
                 "search_tokens")  local idx=1 ;;
                 "token_creator")  local idx=2 ;;
-                # DPNS
+                # DPNS (overlap in idx for other screens)
                 "active_contests")  local idx=0 ;;
                 "past_contests")  local idx=1 ;;
                 "my_usernames")  local idx=2 ;;
                 "scheduled_votes")  local idx=3 ;;
                 # Network
-                "advanced_settings")  local idx=3 ;;
+                "advanced_settings")  local idx=3 ;;  # 4th item (3-based index)
                 *) echo "Unknown screen_sidebar element: $element"; return 1 ;;
             esac
             local target_x=$base_x
@@ -115,7 +116,7 @@ click_ui_element() {
 }
 
 echo "Waiting for $APP_NAME to be ready..."
-sleep 2
+sleep 2   # Wait 2 seconds at the very start for app to launch/stabilize
 
 if ! focus_app; then
     echo "Error: Could not find $APP_NAME window. Make sure the application is running."
@@ -199,9 +200,10 @@ take_screenshot "06_tools_screen"
 click_ui_element "left_sidebar" "network"
 take_screenshot "07_network_chooser_screen"
 
-    # DPNS - Past contestants
+    # Advanced settings dropdown
     click_ui_element "screen_sidebar" "advanced_settings"
-    for i in {1..3}; do
+    # Scroll down 3 clicks (for scrolling to advanced settings if needed)
+    for i in {1..3}; do   # 1..3 = scroll down 3 times (Button 5 = scroll down)
         xdotool click 5
     done
     take_screenshot "07b_network_chooser_advanced_settings"
