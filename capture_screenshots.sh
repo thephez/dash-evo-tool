@@ -76,6 +76,8 @@ click_ui_element() {
                 "documents")     local target_x=$((X + 505)) ;;
                 "add_token")     local target_x=$((X + 950)) ;;
                 "refresh")       local target_x=$((X + 1065)) ;;
+                # DPNS
+                "register_name")     local target_x=$((X + 950)) ;;
                 *) echo "Unknown topbar element: $element"; return 1 ;;
             esac
             local target_y=$topbar_y
@@ -90,7 +92,10 @@ click_ui_element() {
                 "search_tokens")  local idx=1 ;;
                 "token_creator")  local idx=2 ;;
                 # DPNS
+                "active_contests")  local idx=0 ;;
                 "past_contests")  local idx=1 ;;
+                "my_usernames")  local idx=2 ;;
+                "scheduled_votes")  local idx=3 ;;
                 *) echo "Unknown screen_sidebar element: $element"; return 1 ;;
             esac
             local target_x=$base_x
@@ -144,17 +149,28 @@ click_ui_element "left_sidebar" "tokens"
     click_ui_element "topbar" "add_token"
     take_screenshot "03d_tokens_add_token"
 
-    # click_ui_element "topbar" "refresh"
-    # take_screenshot "09_tokens_refreshed"
-
 # DPNS screen
 click_ui_element "left_sidebar" "dpns"
-take_screenshot "04_dpns_screen"
+
+    # DPNS - Register Name
+    click_ui_element "topbar" "register_name"
+    take_screenshot "04_dpns_register_name"
+
+   # DPNS - Past contestants
+    click_ui_element "screen_sidebar" "active_contests"
+    take_screenshot "04a_dpns_active_contests"
 
     # DPNS - Past contestants
     click_ui_element "screen_sidebar" "past_contests"
     take_screenshot "04b_dpns_past_contests"
 
+    # DPNS - Past contestants
+    click_ui_element "screen_sidebar" "my_usernames"
+    take_screenshot "04c_dpns_my_usernames"
+
+    # DPNS - Past contestants
+    click_ui_element "screen_sidebar" "scheduled_votes"
+    take_screenshot "04d_dpns_scheduled_votes"
 
 # Wallets screen
 click_ui_element "left_sidebar" "wallets"
