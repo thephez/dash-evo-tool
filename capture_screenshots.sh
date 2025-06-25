@@ -4,8 +4,8 @@
 # Uses xdotool and wmctrl for GUI automation
 
 SCREENSHOT_DIR="./screenshots"
-DELAY=0.25  # seconds between actions
-FOCUS_APP_DELAY=0.5
+DELAY=0.15  # seconds between actions
+FOCUS_APP_DELAY=0.2
 APP_NAME="Dash Evo Tool v0.9.0-preview.4"
 
 # Create screenshots directory
