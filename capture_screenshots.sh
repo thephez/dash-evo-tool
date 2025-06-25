@@ -4,7 +4,8 @@
 # Uses xdotool and wmctrl for GUI automation
 
 SCREENSHOT_DIR="./screenshots"
-DELAY=0.5  # seconds between actions
+DELAY=0.25  # seconds between actions
+FOCUS_APP_DELAY=0.5
 APP_NAME="Dash Evo Tool v0.9.0-preview.4"
 
 # Create screenshots directory
@@ -17,7 +18,7 @@ focus_app() {
     local window_id=$(wmctrl -l | grep -i "$APP_NAME" | head -1 | cut -d' ' -f1)
     if [ -n "$window_id" ]; then
         wmctrl -i -a "$window_id"
-        sleep 1
+        sleep $FOCUS_APP_DELAY
         return 0
     else
         echo "Could not find $APP_NAME window"
@@ -30,7 +31,7 @@ take_screenshot() {
     local filename="${SCREENSHOT_DIR}/${name}.png"
     echo "Taking screenshot: $name"
     if focus_app; then
-        sleep 0.5
+        sleep $FOCUS_APP_DELAY
         local window_id=$(xdotool search --name "$APP_NAME" | head -1)
         import -window "$window_id" "$filename"
         if [ $? -eq 0 ]; then
@@ -71,9 +72,9 @@ click_ui_element() {
         "topbar")
             local topbar_y=$((Y + 10))
             case "$element" in
-                "group_actions") local target_x=$((X + 240)) ;;
-                "contracts")     local target_x=$((X + 375)) ;;
-                "documents")     local target_x=$((X + 505)) ;;
+                "group_actions") local target_x=$((X + 850)) ;;
+                "contracts")     local target_x=$((X + 975)) ;;
+                "documents")     local target_x=$((X + 1090)) ;;
                 "add_token")     local target_x=$((X + 950)) ;;
                 "refresh")       local target_x=$((X + 1065)) ;;
                 # DPNS
@@ -129,8 +130,24 @@ take_screenshot "01_identities_screen"
 click_ui_element "left_sidebar" "contracts"
 take_screenshot "02_contract_screen"
 
+    # Contract - Contracts
+    click_ui_element "topbar" "contracts"
+    take_screenshot "02_contract_contracts"
+
+    # Contract - Documents
+    click_ui_element "topbar" "documents"
+    take_screenshot "02_contract_documents"
+
+    # Contract - Group Actions
+    click_ui_element "topbar" "group_actions"
+    take_screenshot "02_contract_group_action"
+
 # Tokens screens
 click_ui_element "left_sidebar" "tokens"
+
+    # Token - Add token button
+    click_ui_element "topbar" "add_token"
+    take_screenshot "03_tokens_add_token"
 
     # Tokens - My Tokens tab (default)
     click_ui_element "screen_sidebar" "my_tokens"
@@ -144,11 +161,6 @@ click_ui_element "left_sidebar" "tokens"
     click_ui_element "screen_sidebar" "token_creator"
     take_screenshot "03c_tokens_token_creator"
 
-    # Topbar actions (example)
-    click_ui_element "left_sidebar" "tokens"
-    click_ui_element "topbar" "add_token"
-    take_screenshot "03d_tokens_add_token"
-
 # DPNS screen
 click_ui_element "left_sidebar" "dpns"
 
@@ -157,6 +169,7 @@ click_ui_element "left_sidebar" "dpns"
     take_screenshot "04_dpns_register_name"
 
    # DPNS - Past contestants
+    click_ui_element "left_sidebar" "dpns" # Navigate back to DPNS main screen
     click_ui_element "screen_sidebar" "active_contests"
     take_screenshot "04a_dpns_active_contests"
 
