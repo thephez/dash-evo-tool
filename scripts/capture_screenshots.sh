@@ -35,7 +35,10 @@ take_screenshot() {
     if focus_app; then
         sleep $FOCUS_APP_DELAY
         local window_id=$(xdotool search --name "$APP_NAME" | head -1)
-        import -window "$window_id" "$filename"
+        # Use ImageMagick
+        # import -window "$window_id" "$filename"
+        # Use gnome-screenshot for output with full window decoration and transparent background
+        gnome-screenshot -w -f "$filename"
         if [ $? -eq 0 ]; then
             echo "✓ Screenshot saved: $filename"
         else
