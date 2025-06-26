@@ -241,6 +241,7 @@ click_ui_element "left_sidebar" "tokens"
 
     # Tokens - Search Tokens tab
     click_ui_element "screen_sidebar" "search_tokens"
+    run_custom_action "token_search_field"
     take_screenshot "03b_tokens_search_tokens"
 
     # Tokens - Token Creator tab
