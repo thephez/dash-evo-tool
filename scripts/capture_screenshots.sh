@@ -135,6 +135,69 @@ click_ui_element() {
     sleep $DELAY
 }
 
+# Usage: run_custom_action <element>
+run_custom_action() {
+    local element=$1
+
+    if [ ! -f "$CUSTOM_CSV" ]; then
+        echo "Custom UI CSV '$CUSTOM_CSV' not found!"
+        return 1
+    fi
+
+    # Get the CSV line for the requested element
+    local line
+    line=$(awk -F',' -v e="$element" 'tolower($1) == tolower(e) {print $0}' "$CUSTOM_CSV" | head -1)
+    if [[ -z "$line" ]]; then
+        echo "No mapping for custom element '$element' in $CUSTOM_CSV"
+        return 1
+    fi
+
+    # Extract fields
+    local x_offset action text y_offset
+    IFS=',' read -r _ x_offset y_offset action text <<<"$line"
+    # Remove quotes from text
+    text="${text%\"}"; text="${text#\"}"
+
+    focus_app
+    local window_id
+    window_id=$(xdotool search --name "$APP_NAME" | head -1)
+    eval $(xdotool getwindowgeometry --shell "$window_id")
+    local target_x=$((X + x_offset))
+    local target_y=$((Y + y_offset))
+
+    case "$action" in
+        click)
+            xdotool mousemove $target_x $target_y click 1
+            ;;
+        click_and_type)
+            xdotool mousemove $target_x $target_y click 1
+            sleep $DELAY
+            xdotool type --delay 50 "$text"
+            ;;
+        click_and_type_enter)
+            xdotool mousemove $target_x $target_y click 1
+            sleep $DELAY
+            xdotool type --delay 50 "$text"
+            xdotool key --delay 1200 Return
+            ;;
+        scroll)
+            xdotool mousemove $target_x $target_y
+            sleep $DELAY
+            local scroll_count=1
+            [[ "$text" =~ ^[0-9]+$ ]] && scroll_count="$text"
+            for ((i=0; i<scroll_count; i++)); do
+                xdotool click 5  # Scroll down
+                sleep 0.1
+            done
+            ;;
+        *)
+            echo "Unknown action '$action' for element '$element'"
+            return 1
+            ;;
+    esac
+    sleep $DELAY
+}
+
 echo "Waiting for $APP_NAME to be ready..."
 sleep 2   # Wait 2 seconds at the very start for app to launch/stabilize
 
@@ -221,11 +284,8 @@ click_ui_element "left_sidebar" "network"
 take_screenshot "07_network_chooser_screen"
 
     # Advanced settings dropdown
-    click_ui_element "custom" "advanced_network_settings"
-    # Scroll down 3 clicks (for scrolling to advanced settings if needed)
-    for i in {1..3}; do   # 1..3 = scroll down 3 times (Button 5 = scroll down)
-        xdotool click 5
-    done
+    run_custom_action "advanced_network_settings"
+    run_custom_action "advanced_network_settings_scroll"
     take_screenshot "07b_network_chooser_advanced_settings"
 
 xdotool key Escape

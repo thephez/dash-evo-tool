@@ -1,2 +1,4 @@
-element,x_offset,y_offset
-advanced_network_settings,135,280
+element,x_offset,y_offset,action,text
+advanced_network_settings,135,280,click,
+advanced_network_settings_scroll,135,280,scroll,3
+token_search_field,475,110,click_and_type_enter,"ptt"
