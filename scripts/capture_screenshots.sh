@@ -149,72 +149,72 @@ echo "Starting automated screenshot sequence..."
 click_ui_element "left_sidebar" "identities"
 take_screenshot "01_identities_screen"
 
-# # Contracts screen
-# click_ui_element "left_sidebar" "contracts"
-# take_screenshot "02_contract_screen"
+# Contracts screen
+click_ui_element "left_sidebar" "contracts"
+take_screenshot "02_contract_screen"
 
-#     # Contract - Contracts
-#     click_ui_element "topbar" "contracts"
-#     take_screenshot "02_contract_contracts"
+    # Contract - Contracts
+    click_ui_element "topbar" "contracts"
+    take_screenshot "02_contract_contracts"
 
-#     # Contract - Documents
-#     click_ui_element "topbar" "documents"
-#     take_screenshot "02_contract_documents"
+    # Contract - Documents
+    click_ui_element "topbar" "documents"
+    take_screenshot "02_contract_documents"
 
-#     # Contract - Group Actions
-#     click_ui_element "topbar" "group_actions"
-#     take_screenshot "02_contract_group_action"
+    # Contract - Group Actions
+    click_ui_element "topbar" "group_actions"
+    take_screenshot "02_contract_group_action"
 
-# # Tokens screens
-# click_ui_element "left_sidebar" "tokens"
+# Tokens screens
+click_ui_element "left_sidebar" "tokens"
 
-#     # Token - Add token button
-#     click_ui_element "topbar" "add_token"
-#     take_screenshot "03_tokens_add_token"
+    # Token - Add token button
+    click_ui_element "topbar" "add_token"
+    take_screenshot "03_tokens_add_token"
 
-#     # Tokens - My Tokens tab (default)
-#     click_ui_element "screen_sidebar" "my_tokens"
-#     take_screenshot "03a_tokens_my_tokens"
+    # Tokens - My Tokens tab (default)
+    click_ui_element "screen_sidebar" "my_tokens"
+    take_screenshot "03a_tokens_my_tokens"
 
-#     # Tokens - Search Tokens tab
-#     click_ui_element "screen_sidebar" "search_tokens"
-#     take_screenshot "03b_tokens_search_tokens"
+    # Tokens - Search Tokens tab
+    click_ui_element "screen_sidebar" "search_tokens"
+    take_screenshot "03b_tokens_search_tokens"
 
-#     # Tokens - Token Creator tab
-#     click_ui_element "screen_sidebar" "token_creator"
-#     take_screenshot "03c_tokens_token_creator"
+    # Tokens - Token Creator tab
+    click_ui_element "screen_sidebar" "token_creator"
+    take_screenshot "03c_tokens_token_creator"
 
-# # DPNS screen
-# click_ui_element "left_sidebar" "dpns"
+# DPNS screen
+click_ui_element "left_sidebar" "dpns"
 
-#     # DPNS - Register Name
-#     click_ui_element "topbar" "register_name"
-#     take_screenshot "04_dpns_register_name"
+    # DPNS - Register Name
+    click_ui_element "topbar" "register_name"
+    take_screenshot "04_dpns_register_name"
 
-#     # DPNS - Past contestants
-#     click_ui_element "left_sidebar" "dpns" # Navigate back to DPNS main screen
-#     click_ui_element "screen_sidebar" "active_contests"
-#     take_screenshot "04a_dpns_active_contests"
+    # DPNS - Past contestants
+    click_ui_element "left_sidebar" "dpns" # Navigate back to DPNS main screen
+    click_ui_element "screen_sidebar" "active_contests"
+    take_screenshot "04a_dpns_active_contests"
 
-#     # DPNS - Past contestants
-#     click_ui_element "screen_sidebar" "past_contests"
-#     take_screenshot "04b_dpns_past_contests"
+    # DPNS - Past contestants
+    click_ui_element "screen_sidebar" "past_contests"
+    take_screenshot "04b_dpns_past_contests"
 
-#     # DPNS - Past contestants
-#     click_ui_element "screen_sidebar" "my_usernames"
-#     take_screenshot "04c_dpns_my_usernames"
+    # DPNS - Past contestants
+    click_ui_element "screen_sidebar" "my_usernames"
+    take_screenshot "04c_dpns_my_usernames"
 
-#     # DPNS - Past contestants
-#     click_ui_element "screen_sidebar" "scheduled_votes"
-#     take_screenshot "04d_dpns_scheduled_votes"
+    # DPNS - Past contestants
+    click_ui_element "screen_sidebar" "scheduled_votes"
+    take_screenshot "04d_dpns_scheduled_votes"
 
-# # Wallets screen
-# click_ui_element "left_sidebar" "wallets"
-# take_screenshot "05_wallets_screen"
+# Wallets screen
+click_ui_element "left_sidebar" "wallets"
+take_screenshot "05_wallets_screen"
 
-# # Tools screen
-# click_ui_element "left_sidebar" "tools"
-# take_screenshot "06_tools_screen"
+# Tools screen
+click_ui_element "left_sidebar" "tools"
+take_screenshot "06_tools_screen"
 
 # Network Chooser screen
 click_ui_element "left_sidebar" "network"
