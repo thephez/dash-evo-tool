@@ -1,4 +1,9 @@
 element,x_offset,y_offset,action,text
+identity_actions,860,125,click,
+identity_actions_withdraw,860,150,click,
+identity_actions_topup,860,200,click,
+identity_actions_transfer,860,240,click,
+token_details,400,125,click,
 advanced_network_settings,135,280,click,
 advanced_network_settings_scroll,135,280,scroll,3
 token_search_field,475,110,click_and_type_enter,"ptt"

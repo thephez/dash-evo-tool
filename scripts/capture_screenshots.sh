@@ -103,6 +103,13 @@ click_ui_element() {
                 "past_contests")  local idx=1 ;;
                 "my_usernames")  local idx=2 ;;
                 "scheduled_votes")  local idx=3 ;;
+                # Tools
+                "proof_logs")            local idx=0 ;;
+                "proof_deserializer")    local idx=1 ;;
+                "tx_deserializer")       local idx=2 ;;
+                "doc_deserializer")      local idx=3 ;;
+                "contract_deserializer") local idx=4 ;;
+                "platform_info")         local idx=5 ;;
                 *) echo "Unknown screen_sidebar element: $element"; return 1 ;;
             esac
             local target_x=$base_x
@@ -212,6 +219,24 @@ echo "Starting automated screenshot sequence..."
 click_ui_element "left_sidebar" "identities"
 take_screenshot "01_identities_screen"
 
+    # Identities - Actions
+    run_custom_action "identity_actions"
+    take_screenshot "01a_identity_actions"
+
+        # Identities - Actions - Withdraw
+        run_custom_action "identity_actions_withdraw"
+        take_screenshot "01aa_identity_actions_withdraw"
+
+        # Identities - Actions - Topup
+        click_ui_element "left_sidebar" "identities"
+        run_custom_action "identity_actions_topup"
+        take_screenshot "01ab_identity_actions_topup"
+
+        # Identities - Actions - Transfer
+        click_ui_element "left_sidebar" "identities"
+        run_custom_action "identity_actions_transfer"
+        take_screenshot "01ac_identity_actions_transfer"
+
 # Contracts screen
 click_ui_element "left_sidebar" "contracts"
 take_screenshot "02_contract_screen"
@@ -279,6 +304,30 @@ take_screenshot "05_wallets_screen"
 # Tools screen
 click_ui_element "left_sidebar" "tools"
 take_screenshot "06_tools_screen"
+
+    # Tools - Proof logs
+    click_ui_element "screen_sidebar" "proof_logs"
+    take_screenshot "06a_tools_proof_logs"
+
+    # Tools - Proof logs
+    click_ui_element "screen_sidebar" "proof_deserializer"
+    take_screenshot "06b_tools_proof_deserializer"
+
+    # Tools - Proof logs
+    click_ui_element "screen_sidebar" "tx_deserializer"
+    take_screenshot "06c_tools_tx_deserializer"
+
+    # Tools - Proof logs
+    click_ui_element "screen_sidebar" "doc_deserializer"
+    take_screenshot "06d_tools_doc_deserializer"
+
+    # Tools - Proof logs
+    click_ui_element "screen_sidebar" "contract_deserializer"
+    take_screenshot "06e_tools_contract_deserializer"
+
+    # Tools - Proof logs
+    click_ui_element "screen_sidebar" "platform_info"
+    take_screenshot "06f_tools_platform_info"
 
 # Network Chooser screen
 click_ui_element "left_sidebar" "network"
