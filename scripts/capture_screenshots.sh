@@ -2,8 +2,10 @@
 
 # Fully automated screenshot capture script for Dash Evo Tool documentation
 # Uses xdotool and wmctrl for GUI automation
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CUSTOM_CSV="$SCRIPT_DIR/ui_custom.csv"
+SCREENSHOT_DIR="$SCRIPT_DIR/screenshots"
 
-SCREENSHOT_DIR="./screenshots"
 DELAY=0.15  # seconds between actions (reduce for faster runs, increase if UI lags)
 FOCUS_APP_DELAY=0.2  # seconds to wait after focusing app to avoid race conditions
 APP_NAME="Dash Evo Tool v0.9.0-preview.4"
@@ -98,12 +100,27 @@ click_ui_element() {
                 "past_contests")  local idx=1 ;;
                 "my_usernames")  local idx=2 ;;
                 "scheduled_votes")  local idx=3 ;;
-                # Network
-                "advanced_settings")  local idx=3 ;;  # 4th item (3-based index)
                 *) echo "Unknown screen_sidebar element: $element"; return 1 ;;
             esac
             local target_x=$base_x
             local target_y=$((base_y + idx * (btn_height + btn_gap)))
+            ;;
+        "custom")
+            # Look up from ui_custom.csv
+            if [ ! -f "$CUSTOM_CSV" ]; then
+                echo "Custom UI CSV '$CUSTOM_CSV' not found!"
+                return 1
+            fi
+            local line
+            line=$(awk -F',' -v e="$element" 'tolower($1) == tolower(e) {print $2","$3}' "$CUSTOM_CSV" | head -1)
+            if [[ -z "$line" ]]; then
+                echo "No mapping for custom element '$element' in $CUSTOM_CSV"
+                return 1
+            fi
+            local x_offset=$(echo "$line" | cut -d',' -f1)
+            local y_offset=$(echo "$line" | cut -d',' -f2)
+            local target_x=$((X + x_offset))
+            local target_y=$((Y + y_offset))
             ;;
         *)
             echo "Unknown zone: $zone"
@@ -129,79 +146,79 @@ echo "Starting automated screenshot sequence..."
 click_ui_element "left_sidebar" "identities"
 take_screenshot "01_identities_screen"
 
-# Contracts screen
-click_ui_element "left_sidebar" "contracts"
-take_screenshot "02_contract_screen"
+# # Contracts screen
+# click_ui_element "left_sidebar" "contracts"
+# take_screenshot "02_contract_screen"
 
-    # Contract - Contracts
-    click_ui_element "topbar" "contracts"
-    take_screenshot "02_contract_contracts"
+#     # Contract - Contracts
+#     click_ui_element "topbar" "contracts"
+#     take_screenshot "02_contract_contracts"
 
-    # Contract - Documents
-    click_ui_element "topbar" "documents"
-    take_screenshot "02_contract_documents"
+#     # Contract - Documents
+#     click_ui_element "topbar" "documents"
+#     take_screenshot "02_contract_documents"
 
-    # Contract - Group Actions
-    click_ui_element "topbar" "group_actions"
-    take_screenshot "02_contract_group_action"
+#     # Contract - Group Actions
+#     click_ui_element "topbar" "group_actions"
+#     take_screenshot "02_contract_group_action"
 
-# Tokens screens
-click_ui_element "left_sidebar" "tokens"
+# # Tokens screens
+# click_ui_element "left_sidebar" "tokens"
 
-    # Token - Add token button
-    click_ui_element "topbar" "add_token"
-    take_screenshot "03_tokens_add_token"
+#     # Token - Add token button
+#     click_ui_element "topbar" "add_token"
+#     take_screenshot "03_tokens_add_token"
 
-    # Tokens - My Tokens tab (default)
-    click_ui_element "screen_sidebar" "my_tokens"
-    take_screenshot "03a_tokens_my_tokens"
+#     # Tokens - My Tokens tab (default)
+#     click_ui_element "screen_sidebar" "my_tokens"
+#     take_screenshot "03a_tokens_my_tokens"
 
-    # Tokens - Search Tokens tab
-    click_ui_element "screen_sidebar" "search_tokens"
-    take_screenshot "03b_tokens_search_tokens"
+#     # Tokens - Search Tokens tab
+#     click_ui_element "screen_sidebar" "search_tokens"
+#     take_screenshot "03b_tokens_search_tokens"
 
-    # Tokens - Token Creator tab
-    click_ui_element "screen_sidebar" "token_creator"
-    take_screenshot "03c_tokens_token_creator"
+#     # Tokens - Token Creator tab
+#     click_ui_element "screen_sidebar" "token_creator"
+#     take_screenshot "03c_tokens_token_creator"
 
-# DPNS screen
-click_ui_element "left_sidebar" "dpns"
+# # DPNS screen
+# click_ui_element "left_sidebar" "dpns"
 
-    # DPNS - Register Name
-    click_ui_element "topbar" "register_name"
-    take_screenshot "04_dpns_register_name"
+#     # DPNS - Register Name
+#     click_ui_element "topbar" "register_name"
+#     take_screenshot "04_dpns_register_name"
 
-    # DPNS - Past contestants
-    click_ui_element "left_sidebar" "dpns" # Navigate back to DPNS main screen
-    click_ui_element "screen_sidebar" "active_contests"
-    take_screenshot "04a_dpns_active_contests"
+#     # DPNS - Past contestants
+#     click_ui_element "left_sidebar" "dpns" # Navigate back to DPNS main screen
+#     click_ui_element "screen_sidebar" "active_contests"
+#     take_screenshot "04a_dpns_active_contests"
 
-    # DPNS - Past contestants
-    click_ui_element "screen_sidebar" "past_contests"
-    take_screenshot "04b_dpns_past_contests"
+#     # DPNS - Past contestants
+#     click_ui_element "screen_sidebar" "past_contests"
+#     take_screenshot "04b_dpns_past_contests"
 
-    # DPNS - Past contestants
-    click_ui_element "screen_sidebar" "my_usernames"
-    take_screenshot "04c_dpns_my_usernames"
+#     # DPNS - Past contestants
+#     click_ui_element "screen_sidebar" "my_usernames"
+#     take_screenshot "04c_dpns_my_usernames"
 
-    # DPNS - Past contestants
-    click_ui_element "screen_sidebar" "scheduled_votes"
-    take_screenshot "04d_dpns_scheduled_votes"
+#     # DPNS - Past contestants
+#     click_ui_element "screen_sidebar" "scheduled_votes"
+#     take_screenshot "04d_dpns_scheduled_votes"
 
-# Wallets screen
-click_ui_element "left_sidebar" "wallets"
-take_screenshot "05_wallets_screen"
+# # Wallets screen
+# click_ui_element "left_sidebar" "wallets"
+# take_screenshot "05_wallets_screen"
 
-# Tools screen
-click_ui_element "left_sidebar" "tools"
-take_screenshot "06_tools_screen"
+# # Tools screen
+# click_ui_element "left_sidebar" "tools"
+# take_screenshot "06_tools_screen"
 
 # Network Chooser screen
 click_ui_element "left_sidebar" "network"
 take_screenshot "07_network_chooser_screen"
 
     # Advanced settings dropdown
-    click_ui_element "screen_sidebar" "advanced_settings"
+    click_ui_element "custom" "advanced_network_settings"
     # Scroll down 3 clicks (for scrolling to advanced settings if needed)
     for i in {1..3}; do   # 1..3 = scroll down 3 times (Button 5 = scroll down)
         xdotool click 5
