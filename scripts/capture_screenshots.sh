@@ -171,7 +171,7 @@ click_ui_element "left_sidebar" "dpns"
     click_ui_element "topbar" "register_name"
     take_screenshot "04_dpns_register_name"
 
-   # DPNS - Past contestants
+    # DPNS - Past contestants
     click_ui_element "left_sidebar" "dpns" # Navigate back to DPNS main screen
     click_ui_element "screen_sidebar" "active_contests"
     take_screenshot "04a_dpns_active_contests"
