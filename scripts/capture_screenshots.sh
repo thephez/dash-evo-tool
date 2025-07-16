@@ -8,7 +8,7 @@ SCREENSHOT_DIR="$SCRIPT_DIR/screenshots"
 
 DELAY=0.15  # seconds between actions (reduce for faster runs, increase if UI lags)
 FOCUS_APP_DELAY=0.2  # seconds to wait after focusing app to avoid race conditions
-APP_NAME="Dash Evo Tool v0.9.0-preview.4"
+APP_NAME="Dash Evo Tool v0.9.0"
 
 # Create screenshots directory
 mkdir -p "$SCREENSHOT_DIR"
