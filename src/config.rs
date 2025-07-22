@@ -38,6 +38,8 @@ pub struct NetworkConfig {
     pub core_rpc_user: String,
     /// Password for Dash Core RPC interface
     pub core_rpc_password: String,
+    /// Wallet name for Dash Core RPC interface
+    pub core_wallet_name: Option<String>,
     /// URL of the Insight API
     pub insight_api_url: String,
     /// Devnet network name if one exists
@@ -115,6 +117,10 @@ impl Config {
                     prefix, wallet_private_key
                 )
                 .map_err(|e| ConfigError::LoadError(e.to_string()))?;
+            }
+            if let Some(wallet_name) = &config.core_wallet_name {
+                writeln!(env_file, "{}core_wallet_name={}", prefix, wallet_name)
+                    .map_err(|e| ConfigError::LoadError(e.to_string()))?;
             }
 
             // Whether or not to show in UI
