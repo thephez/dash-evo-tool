@@ -433,6 +433,16 @@ impl AppContext {
         self.db.clear_executed_scheduled_votes(self)
     }
 
+    pub fn wallet_client(&self, wallet_name: &str) -> Client {
+        let cfg = self.config.read().expect("Config lock poisoned");
+        let url = format!(
+            "http://{}:{}/wallet/{}",
+            cfg.core_host, cfg.core_rpc_port, wallet_name
+        );
+        Client::new(&url, Auth::UserPass(cfg.core_rpc_user.clone(), cfg.core_rpc_password.clone()))
+            .expect("Failed to create wallet client")
+    }
+
     /// Deletes a scheduled vote from the database
     #[allow(clippy::ptr_arg)]
     pub fn delete_scheduled_vote(&self, identity_id: &[u8], contested_name: &String) -> Result<()> {

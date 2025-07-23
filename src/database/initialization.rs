@@ -4,7 +4,7 @@ use rusqlite::{Connection, params};
 use std::fs;
 use std::path::Path;
 
-pub const DEFAULT_DB_VERSION: u16 = 11;
+pub const DEFAULT_DB_VERSION: u16 = 12;
 
 pub const DEFAULT_NETWORK: &str = "dash";
 
@@ -34,6 +34,7 @@ impl Database {
 
     fn apply_version_changes(&self, version: u16, tx: &Connection) -> rusqlite::Result<()> {
         match version {
+            12 => self.add_core_wallet_name_column(tx)?,
             11 => self.rename_identity_column_is_in_creation_to_status(tx)?,
             10 => {
                 self.add_theme_preference_column(tx)?;
@@ -230,6 +231,7 @@ impl Database {
                 nonce BLOB NOT NULL,
                 master_ecdsa_bip44_account_0_epk BLOB NOT NULL,
                 alias TEXT,
+                core_wallet_name TEXT,
                 is_main INTEGER,
                 uses_password INTEGER NOT NULL,
                 password_hint TEXT,

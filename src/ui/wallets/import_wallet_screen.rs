@@ -107,6 +107,7 @@ impl ImportWalletScreen {
                 watched_addresses: Default::default(),
                 unused_asset_locks: Default::default(),
                 alias: Some(self.alias_input.clone()),
+                core_wallet_name: None,
                 identities: Default::default(),
                 utxos: Default::default(),
                 is_main: true,
