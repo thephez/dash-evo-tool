@@ -22,18 +22,14 @@ impl TopUpIdentityScreen {
                     )?;
 
                     // Import address to Core if needed for monitoring
-                    let core_client = self
-                        .app_context
-                        .core_client
-                        .read()
-                        .map_err(|_| "Core client lock was poisoned".to_string())?;
-
-                    let info = core_client
+                    let client = wallet
+                        .rpc_client(&self.app_context)?;
+                    let info = client
                         .get_address_info(&receive_address)
                         .map_err(|e| e.to_string())?;
 
                     if !(info.is_watchonly || info.is_mine) {
-                        core_client
+                        client
                             .import_address(
                                 &receive_address,
                                 Some("Managed by Dash Evo Tool"),
@@ -42,7 +38,6 @@ impl TopUpIdentityScreen {
                             .map_err(|e| e.to_string())?;
                     }
 
-                    drop(core_client);
 
                     self.funding_address = Some(receive_address.clone());
                     receive_address

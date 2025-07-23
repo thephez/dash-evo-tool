@@ -64,8 +64,9 @@ impl TryFrom<u32> for DerivationPathReference {
 
 use crate::context::AppContext;
 use bitflags::bitflags;
-use dash_sdk::dashcore_rpc::RpcApi;
+use dash_sdk::dashcore_rpc::{Client, RpcApi, Auth};
 use dash_sdk::dashcore_rpc::dashcore::key::Secp256k1;
+use crate::app_dir::core_cookie_path;
 use dash_sdk::dpp::balances::credits::Duffs;
 use dash_sdk::dpp::dashcore::hashes::Hash;
 use dash_sdk::dpp::fee::Credits;
@@ -137,6 +138,8 @@ pub struct Wallet {
         Option<AssetLockProof>,
     )>,
     pub alias: Option<String>,
+    /// Name of the Dash Core wallet this wallet is linked to
+    pub core_wallet_name: Option<String>,
     pub identities: HashMap<u32, Identity>,
     pub utxos: HashMap<Address, HashMap<OutPoint, TxOut>>,
     pub is_main: bool,
@@ -254,6 +257,24 @@ impl Drop for WalletSeed {
 impl Wallet {
     pub fn is_open(&self) -> bool {
         matches!(self.wallet_seed, WalletSeed::Open(_))
+    }
+
+    pub fn rpc_client(&self, app_context: &AppContext) -> Result<Client, dash_sdk::dashcore_rpc::Error> {
+        let cfg = app_context.config.read().unwrap();
+        let addr = if let Some(name) = &self.core_wallet_name {
+            if !name.is_empty() {
+                format!("http://{}:{}/wallet/{}", cfg.core_host, cfg.core_rpc_port, name)
+            } else {
+                format!("http://{}:{}", cfg.core_host, cfg.core_rpc_port)
+            }
+        } else {
+            format!("http://{}:{}", cfg.core_host, cfg.core_rpc_port)
+        };
+        let cookie_path = core_cookie_path(app_context.network, &cfg.devnet_name)
+            .map_err(|e| dash_sdk::dashcore_rpc::Error::InvalidCookieFile(e.to_string()))?;
+        Client::new(&addr, Auth::CookieFile(cookie_path.clone())).or_else(|_| {
+            Client::new(&addr, Auth::UserPass(cfg.core_rpc_user.clone(), cfg.core_rpc_password.clone()))
+        })
     }
     pub fn has_balance(&self) -> bool {
         self.max_balance() > 0
@@ -442,10 +463,8 @@ impl Wallet {
                 known_public_key = Some(public_key);
                 if let Some(app_context) = register {
                     let address = Address::p2pkh(&public_key, network);
-                    app_context
-                        .core_client
-                        .read()
-                        .expect("Core client lock was poisoned")
+                    self
+                        .rpc_client(app_context)?
                         .import_address(
                             &address,
                             Some(

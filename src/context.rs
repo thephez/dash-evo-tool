@@ -232,6 +232,24 @@ impl AppContext {
         }
     }
 
+    pub fn rpc_client_for_wallet(&self, wallet_name: Option<&str>) -> Result<Client, dash_sdk::dashcore_rpc::Error> {
+        let cfg = self.config.read().unwrap();
+        let addr = if let Some(name) = wallet_name {
+            if !name.is_empty() {
+                format!("http://{}:{}/wallet/{}", cfg.core_host, cfg.core_rpc_port, name)
+            } else {
+                format!("http://{}:{}", cfg.core_host, cfg.core_rpc_port)
+            }
+        } else {
+            format!("http://{}:{}", cfg.core_host, cfg.core_rpc_port)
+        };
+        let cookie_path = core_cookie_path(self.network, &cfg.devnet_name)
+            .map_err(|e| dash_sdk::dashcore_rpc::Error::InvalidCookieFile(e.to_string()))?;
+        Client::new(&addr, Auth::CookieFile(cookie_path.clone())).or_else(|_| {
+            Client::new(&addr, Auth::UserPass(cfg.core_rpc_user.clone(), cfg.core_rpc_password.clone()))
+        })
+    }
+
     /// Rebuild both the Dash RPC `core_client` and the `Sdk` using the
     /// updated `NetworkConfig` from `self.config`.
     pub fn reinit_core_client_and_sdk(self: Arc<Self>) -> Result<(), String> {
