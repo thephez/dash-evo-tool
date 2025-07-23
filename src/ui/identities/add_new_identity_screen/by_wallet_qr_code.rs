@@ -29,10 +29,8 @@ impl AddNewIdentityScreen {
 
                     if let Some(has_address) = self.core_has_funding_address {
                         if !has_address {
-                            self.app_context
-                                .core_client
-                                .read()
-                                .expect("Core client lock was poisoned")
+                            wallet
+                                .rpc_client(&self.app_context)?
                                 .import_address(
                                     &receive_address,
                                     Some("Managed by Dash Evo Tool"),
@@ -42,19 +40,14 @@ impl AddNewIdentityScreen {
                         }
                         self.funding_address = Some(receive_address);
                     } else {
-                        let info = self
-                            .app_context
-                            .core_client
-                            .read()
-                            .expect("Core client lock was poisoned")
+                        let info = wallet
+                            .rpc_client(&self.app_context)?
                             .get_address_info(&receive_address)
                             .map_err(|e| e.to_string())?;
 
                         if !(info.is_watchonly || info.is_mine) {
-                            self.app_context
-                                .core_client
-                                .read()
-                                .expect("Core client lock was poisoned")
+                            wallet
+                                .rpc_client(&self.app_context)?
                                 .import_address(
                                     &receive_address,
                                     Some("Managed by Dash Evo Tool"),

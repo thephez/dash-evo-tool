@@ -56,10 +56,21 @@ pub struct AddNewWalletScreen {
     error: Option<String>,
     pub app_context: Arc<AppContext>,
     use_password_for_app: bool,
+    core_wallets: Vec<String>,
+    selected_core_wallet: Option<String>,
 }
 
 impl AddNewWalletScreen {
     pub fn new(app_context: &Arc<AppContext>) -> Self {
+        let core_wallets = app_context
+            .rpc_client_for_wallet(None)
+            .and_then(|c| c.list_wallets())
+            .unwrap_or_default();
+        let error = if core_wallets.is_empty() {
+            Some("No wallets are open in Dash Core. Please open a wallet before creating a DET wallet.".to_string())
+        } else {
+            None
+        };
         Self {
             seed_phrase: None,
             password: String::new(),
@@ -69,9 +80,11 @@ impl AddNewWalletScreen {
             wrote_it_down: false,
             password_strength: 0.0,
             estimated_time_to_crack: "".to_string(),
-            error: None,
+            error,
             app_context: app_context.clone(),
             use_password_for_app: true,
+            selected_core_wallet: core_wallets.first().cloned(),
+            core_wallets,
         }
     }
 
@@ -125,6 +138,13 @@ impl AddNewWalletScreen {
             // Compute the seed hash
             let seed_hash = ClosedKeyItem::compute_seed_hash(&seed);
 
+            let selected_core_wallet = match &self.selected_core_wallet {
+                Some(w) => w.clone(),
+                None => {
+                    return Err("No Dash Core wallet selected".to_string());
+                }
+            };
+
             let wallet = Wallet {
                 wallet_seed: WalletSeed::Open(OpenWalletSeed {
                     seed,
@@ -143,6 +163,7 @@ impl AddNewWalletScreen {
                 watched_addresses: Default::default(),
                 unused_asset_locks: Default::default(),
                 alias: Some(self.alias_input.clone()),
+                core_wallet_name: Some(selected_core_wallet.clone()),
                 identities: Default::default(),
                 utxos: Default::default(),
                 is_main: true,
@@ -360,7 +381,21 @@ impl ScreenLike for AddNewWalletScreen {
 
                     ui.add_space(20.0);
 
-                    ui.heading("5. Add a password that must be used to unlock the wallet. (Optional but recommended)");
+                    ui.heading("5. Select the Dash Core wallet to link with.");
+
+                    ui.add_space(8.0);
+
+                    ComboBox::from_label("")
+                        .selected_text(self.selected_core_wallet.clone().unwrap_or_default())
+                        .show_ui(ui, |ui| {
+                            for w in &self.core_wallets {
+                                ui.selectable_value(&mut self.selected_core_wallet, Some(w.clone()), w);
+                            }
+                        });
+
+                    ui.add_space(20.0);
+
+                    ui.heading("6. Add a password that must be used to unlock the wallet. (Optional but recommended)");
 
                     ui.add_space(8.0);
 
@@ -428,7 +463,7 @@ impl ScreenLike for AddNewWalletScreen {
 
                     ui.add_space(20.0);
 
-                    ui.heading("6. Save the wallet.");
+                    ui.heading("7. Save the wallet.");
                     ui.add_space(5.0);
 
                     // Centered "Save Wallet" button at the bottom

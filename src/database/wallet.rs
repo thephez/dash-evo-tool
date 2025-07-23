@@ -33,8 +33,8 @@ impl Database {
             wallet.master_bip44_ecdsa_extended_public_key.encode();
 
         self.execute(
-            "INSERT INTO wallet (seed_hash, encrypted_seed, salt, nonce, master_ecdsa_bip44_account_0_epk, alias, is_main, uses_password, password_hint, network)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO wallet (seed_hash, encrypted_seed, salt, nonce, master_ecdsa_bip44_account_0_epk, alias, core_wallet_name, is_main, uses_password, password_hint, network)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             params![
                 wallet.seed_hash(),
                 wallet.encrypted_seed_slice(),
@@ -42,6 +42,7 @@ impl Database {
                 wallet.nonce(),
                 master_ecdsa_bip44_account_0_epk_bytes,
                 wallet.alias.clone(),
+                wallet.core_wallet_name.clone(),
                 wallet.is_main as i32,
                 wallet.uses_password,
                 wallet.password_hint().clone(),
@@ -80,6 +81,21 @@ impl Database {
             "UPDATE wallet SET alias = ?, is_main = ? WHERE seed_hash = ?",
             params![new_alias, is_main as i32, seed_hash],
         )?;
+        Ok(())
+    }
+
+    pub fn add_core_wallet_name_column(&self, conn: &rusqlite::Connection) -> rusqlite::Result<()> {
+        let exists: bool = conn.query_row(
+            "SELECT COUNT(*) FROM pragma_table_info('wallet') WHERE name='core_wallet_name'",
+            [],
+            |row| row.get::<_, i32>(0).map(|c| c > 0),
+        )?;
+        if !exists {
+            conn.execute(
+                "ALTER TABLE wallet ADD COLUMN core_wallet_name TEXT",
+                [],
+            )?;
+        }
         Ok(())
     }
 
@@ -177,7 +193,7 @@ impl Database {
 
         tracing::trace!("step 1: retrieve all wallets for the given network");
         let mut stmt = conn.prepare(
-            "SELECT seed_hash, encrypted_seed, salt, nonce, master_ecdsa_bip44_account_0_epk, alias, is_main, uses_password, password_hint FROM wallet WHERE network = ?",
+            "SELECT seed_hash, encrypted_seed, salt, nonce, master_ecdsa_bip44_account_0_epk, alias, core_wallet_name, is_main, uses_password, password_hint FROM wallet WHERE network = ?",
         )?;
 
         let mut wallets_map: BTreeMap<[u8; 32], Wallet> = BTreeMap::new();
@@ -189,9 +205,10 @@ impl Database {
             let nonce: Vec<u8> = row.get(3)?;
             let master_ecdsa_bip44_account_0_epk_bytes: Vec<u8> = row.get(4)?;
             let alias: Option<String> = row.get(5)?;
-            let is_main: bool = row.get(6)?;
-            let uses_password: bool = row.get(7)?;
-            let password_hint: Option<String> = row.get(8)?;
+            let core_wallet_name: Option<String> = row.get(6)?;
+            let is_main: bool = row.get(7)?;
+            let uses_password: bool = row.get(8)?;
+            let password_hint: Option<String> = row.get(9)?;
 
             // Reconstruct the extended public keys
             let master_ecdsa_extended_public_key =
@@ -237,6 +254,7 @@ impl Database {
                     watched_addresses: BTreeMap::new(),
                     unused_asset_locks: vec![],
                     alias,
+                    core_wallet_name,
                     identities: HashMap::new(),
                     utxos: HashMap::new(),
                     is_main,

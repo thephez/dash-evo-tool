@@ -57,10 +57,10 @@ impl AppContext {
                             asset_lock_proof.as_ref()
                         {
                             // we need to make sure the instant send asset lock is recent
-                            let raw_transaction_info = self
-                                .core_client
+                            let raw_transaction_info = wallet
                                 .read()
-                                .expect("Core client lock was poisoned")
+                                .map_err(|e| e.to_string())?
+                                .rpc_client(self)?
                                 .get_raw_transaction_info(&tx_id, None)
                                 .map_err(|e| e.to_string())?;
 
@@ -100,12 +100,9 @@ impl AppContext {
                         ) {
                             Ok(transaction) => transaction,
                             Err(_) => {
-                                wallet
-                                    .reload_utxos(
-                                        &self
-                                            .core_client
-                                            .read()
-                                            .expect("Core client lock was poisoned"),
+                                let client = wallet.rpc_client(self)?;
+                                wallet.reload_utxos(
+                                        &client,
                                         self.network,
                                         Some(self),
                                     )
@@ -135,9 +132,10 @@ impl AppContext {
                         proofs.insert(tx_id, None);
                     }
 
-                    self.core_client
+                    wallet
                         .read()
-                        .expect("Core client lock was poisoned")
+                        .map_err(|e| e.to_string())?
+                        .rpc_client(self)?
                         .send_raw_transaction(&asset_lock_transaction)
                         .map_err(|e| e.to_string())?;
 
@@ -208,9 +206,10 @@ impl AppContext {
                         proofs.insert(tx_id, None);
                     }
 
-                    self.core_client
+                    wallet
                         .read()
-                        .expect("Core client lock was poisoned")
+                        .map_err(|e| e.to_string())?
+                        .rpc_client(self)?
                         .send_raw_transaction(&asset_lock_transaction)
                         .map_err(|e| e.to_string())?;
 
