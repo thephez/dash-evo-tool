@@ -18,7 +18,7 @@ use bincode::config;
 use crossbeam_channel::{Receiver, Sender};
 use dash_sdk::Sdk;
 use dash_sdk::dashcore_rpc::dashcore::{InstantLock, Transaction};
-use dash_sdk::dashcore_rpc::{Auth, Client};
+use dash_sdk::dashcore_rpc::{Auth, Client, RpcApi};
 use dash_sdk::dpp::dashcore::hashes::Hash;
 use dash_sdk::dpp::dashcore::transaction::special_transaction::TransactionPayload::AssetLockPayloadType;
 use dash_sdk::dpp::dashcore::{Address, Network, OutPoint, TxOut, Txid};
@@ -92,6 +92,97 @@ impl AppContext {
         let network_config = config.config_for_network(network).clone()?;
         let (sx_zmq_status, rx_zmq_status) = crossbeam_channel::unbounded();
 
+        let mut addr = format!(
+            "http://{}:{}",
+            network_config.core_host, network_config.core_rpc_port
+        );
+        let cookie_path = core_cookie_path(network, &network_config.devnet_name)
+            .expect("expected to get cookie path");
+
+        // Determine which Dash Core wallet to use
+        let stored_wallet = db
+            .get_settings()
+            .ok()
+            .and_then(|opt| opt.map(Settings::from).and_then(|s| s.core_wallet_name));
+
+        let wallet_name = if let Some(name) = stored_wallet {
+            // Verify that wallet is loaded
+            match Client::new(&addr, Auth::CookieFile(cookie_path.clone())) {
+                Ok(tmp_client) => {
+                    if let Ok(list) = tmp_client.list_wallets() {
+                        if list.contains(&name) {
+                            Some(name)
+                        } else {
+                            println!(
+                                "Configured wallet '{}' not loaded in Dash Core.",
+                                name
+                            );
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                }
+                Err(_) => None,
+            }
+        } else {
+            match Client::new(&addr, Auth::CookieFile(cookie_path.clone())) {
+                Ok(tmp_client) => match tmp_client.list_wallets() {
+                    Ok(wallets) => {
+                        if wallets.is_empty() {
+                            println!(
+                                "No wallets loaded. Please load a wallet in Dash Core and restart."
+                            );
+                            return None;
+                        } else if wallets.len() == 1 {
+                            let w = wallets[0].clone();
+                            println!("Wallet detected: '{}'. Use this wallet? [y/N]", w);
+                            let mut input = String::new();
+                            if std::io::stdin().read_line(&mut input).is_err() {
+                                return None;
+                            }
+                            if input.trim().eq_ignore_ascii_case("y") {
+                                let _ = db.update_core_wallet_name(Some(&w));
+                                Some(w)
+                            } else {
+                                println!("Wallet not confirmed. Exiting.");
+                                return None;
+                            }
+                        } else {
+                            println!("Available wallets:");
+                            for (i, w) in wallets.iter().enumerate() {
+                                println!("{}. {}", i + 1, w);
+                            }
+                            println!("Enter wallet number:");
+                            let mut input = String::new();
+                            if std::io::stdin().read_line(&mut input).is_err() {
+                                return None;
+                            }
+                            if let Ok(idx) = input.trim().parse::<usize>() {
+                                if idx >= 1 && idx <= wallets.len() {
+                                    let selected = wallets[idx - 1].clone();
+                                    let _ = db.update_core_wallet_name(Some(&selected));
+                                    Some(selected)
+                                } else {
+                                    println!("Invalid selection.");
+                                    return None;
+                                }
+                            } else {
+                                println!("Invalid input.");
+                                return None;
+                            }
+                        }
+                    }
+                    Err(_) => None,
+                },
+                Err(_) => None,
+            }
+        };
+
+        if let Some(ref name) = wallet_name {
+            addr = format!("{}/wallet/{}", addr, name);
+        }
+
         // we create provider, but we need to set app context to it later, as we have a circular dependency
         let provider =
             Provider::new(db.clone(), network, &network_config).expect("Failed to initialize SDK");
@@ -113,13 +204,6 @@ impl AppContext {
         let keyword_search_contract =
             load_system_data_contract(SystemDataContract::KeywordSearch, platform_version)
                 .expect("expected to get keyword search contract");
-
-        let addr = format!(
-            "http://{}:{}",
-            network_config.core_host, network_config.core_rpc_port
-        );
-        let cookie_path = core_cookie_path(network, &network_config.devnet_name)
-            .expect("expected to get cookie path");
 
         // Try cookie authentication first
         let core_client = match Client::new(&addr, Auth::CookieFile(cookie_path.clone())) {

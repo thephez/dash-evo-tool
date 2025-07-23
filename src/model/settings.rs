@@ -15,6 +15,7 @@ pub struct Settings {
     pub dash_qt_path: Option<PathBuf>,
     pub overwrite_dash_conf: bool,
     pub theme_mode: ThemeMode,
+    pub core_wallet_name: Option<String>,
 }
 
 impl
@@ -25,6 +26,7 @@ impl
         Option<PathBuf>,
         bool,
         ThemeMode,
+        Option<String>,
     )> for Settings
 {
     /// Converts a tuple into a Settings instance
@@ -38,9 +40,18 @@ impl
             Option<PathBuf>,
             bool,
             ThemeMode,
+            Option<String>,
         ),
     ) -> Self {
-        Self::new(tuple.0, tuple.1, tuple.2, tuple.3, tuple.4, tuple.5)
+        Self::new(
+            tuple.0,
+            tuple.1,
+            tuple.2,
+            tuple.3,
+            tuple.4,
+            tuple.5,
+            tuple.6,
+        )
     }
 }
 
@@ -54,6 +65,7 @@ impl Default for Settings {
             None, // autodetect
             true,
             ThemeMode::System,
+            None,
         )
     }
 }
@@ -67,6 +79,7 @@ impl Settings {
         dash_qt_path: Option<PathBuf>,
         overwrite_dash_conf: bool,
         theme_mode: ThemeMode,
+        core_wallet_name: Option<String>,
     ) -> Self {
         Self {
             network,
@@ -75,6 +88,7 @@ impl Settings {
             dash_qt_path: dash_qt_path.or_else(detect_dash_qt_path),
             overwrite_dash_conf,
             theme_mode,
+            core_wallet_name,
         }
     }
 }

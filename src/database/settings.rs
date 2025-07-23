@@ -95,6 +95,23 @@ impl Database {
         Ok(())
     }
 
+    pub fn add_core_wallet_name_column(&self, conn: &rusqlite::Connection) -> Result<()> {
+        let exists: bool = conn.query_row(
+            "SELECT COUNT(*) FROM pragma_table_info('settings') WHERE name='core_wallet_name'",
+            [],
+            |row| row.get::<_, i32>(0).map(|count| count > 0),
+        )?;
+
+        if !exists {
+            conn.execute(
+                "ALTER TABLE settings ADD COLUMN core_wallet_name TEXT DEFAULT NULL;",
+                (),
+            )?;
+        }
+
+        Ok(())
+    }
+
     pub fn add_theme_preference_column(&self, conn: &rusqlite::Connection) -> Result<()> {
         // Check if theme_preference column exists
         let theme_preference_exists: bool = conn.query_row(
@@ -130,6 +147,14 @@ impl Database {
         Ok(())
     }
 
+    pub fn update_core_wallet_name(&self, wallet_name: Option<&str>) -> Result<()> {
+        self.execute(
+            "UPDATE settings SET core_wallet_name = ? WHERE id = 1",
+            rusqlite::params![wallet_name],
+        )?;
+        Ok(())
+    }
+
     /// Updates the database version in the settings table.
     pub fn update_database_version(&self, new_version: u16, conn: &Connection) -> Result<()> {
         // Ensure the database version is updated
@@ -155,12 +180,14 @@ impl Database {
             Option<PathBuf>,
             bool,
             ThemeMode,
+            Option<String>,
         )>,
     > {
         // Query the settings row
         let conn = self.conn.lock().unwrap();
-        let mut stmt =
-            conn.prepare("SELECT network, start_root_screen, password_check, main_password_salt, main_password_nonce, custom_dash_qt_path, overwrite_dash_conf, theme_preference FROM settings WHERE id = 1")?;
+        let mut stmt = conn.prepare(
+            "SELECT network, start_root_screen, password_check, main_password_salt, main_password_nonce, custom_dash_qt_path, overwrite_dash_conf, theme_preference, core_wallet_name FROM settings WHERE id = 1",
+        )?;
 
         let result = stmt.query_row([], |row| {
             let network: String = row.get(0)?;
@@ -171,6 +198,7 @@ impl Database {
             let custom_dash_qt_path: Option<String> = row.get(5)?;
             let overwrite_dash_conf: Option<bool> = row.get(6)?;
             let theme_preference: Option<String> = row.get(7)?;
+            let core_wallet_name: Option<String> = row.get(8)?;
 
             // Combine the password-related fields if all are present, otherwise set to None
             let password_data = match (password_check, main_password_salt, main_password_nonce) {
@@ -205,6 +233,7 @@ impl Database {
                 custom_dash_qt_path.map(PathBuf::from),
                 overwrite_dash_conf.unwrap_or(true),
                 theme_mode,
+                core_wallet_name,
             ))
         });
 
