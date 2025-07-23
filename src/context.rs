@@ -433,6 +433,14 @@ impl AppContext {
         self.db.clear_executed_scheduled_votes(self)
     }
 
+    pub fn wallet_client(&self, wallet_name: &str) -> Client {
+        self
+            .core_client
+            .read()
+            .expect("Core client lock was poisoned")
+            .wallet(wallet_name)
+    }
+
     /// Deletes a scheduled vote from the database
     #[allow(clippy::ptr_arg)]
     pub fn delete_scheduled_vote(&self, identity_id: &[u8], contested_name: &String) -> Result<()> {
