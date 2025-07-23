@@ -18,7 +18,7 @@ use bincode::config;
 use crossbeam_channel::{Receiver, Sender};
 use dash_sdk::Sdk;
 use dash_sdk::dashcore_rpc::dashcore::{InstantLock, Transaction};
-use dash_sdk::dashcore_rpc::{Auth, Client};
+use dash_sdk::dashcore_rpc::{Auth, Client, RpcApi};
 use dash_sdk::dpp::dashcore::hashes::Hash;
 use dash_sdk::dpp::dashcore::transaction::special_transaction::TransactionPayload::AssetLockPayloadType;
 use dash_sdk::dpp::dashcore::{Address, Network, OutPoint, TxOut, Txid};
