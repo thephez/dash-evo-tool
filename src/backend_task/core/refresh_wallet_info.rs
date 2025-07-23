@@ -28,13 +28,14 @@ impl AppContext {
         };
 
         // Step 2: Iterate over each address and update balances
+        let client = {
+            let wallet_guard = wallet.read().map_err(|e| e.to_string())?;
+            self.wallet_client(wallet_guard.core_wallet_name.as_deref().unwrap_or(""))
+        };
+
         for address in &addresses {
             // Fetch balance for the address from Dash Core
-            match self
-                .core_client
-                .read()
-                .expect("Core client lock was poisoned")
-                .get_received_by_address(address, None)
+            match client.get_received_by_address(address, None)
             {
                 Ok(new_balance) => {
                     // Update the wallet's address_balances and database
@@ -53,10 +54,7 @@ impl AppContext {
         let utxo_map = {
             let mut wallet_guard = wallet.write().map_err(|e| e.to_string())?;
             match wallet_guard.reload_utxos(
-                &self
-                    .core_client
-                    .read()
-                    .expect("Core client lock was poisoned"),
+                &client,
                 self.network,
                 Some(self),
             ) {

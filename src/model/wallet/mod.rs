@@ -140,6 +140,7 @@ pub struct Wallet {
     pub identities: HashMap<u32, Identity>,
     pub utxos: HashMap<Address, HashMap<OutPoint, TxOut>>,
     pub is_main: bool,
+    pub core_wallet_name: Option<String>,
 }
 
 pub type WalletSeedHash = [u8; 32];
