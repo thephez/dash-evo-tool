@@ -18,7 +18,7 @@ use bincode::config;
 use crossbeam_channel::{Receiver, Sender};
 use dash_sdk::Sdk;
 use dash_sdk::dashcore_rpc::dashcore::{InstantLock, Transaction};
-use dash_sdk::dashcore_rpc::{Auth, Client};
+use dash_sdk::dashcore_rpc::{Auth, Client, RpcApi};
 use dash_sdk::dpp::dashcore::hashes::Hash;
 use dash_sdk::dpp::dashcore::transaction::special_transaction::TransactionPayload::AssetLockPayloadType;
 use dash_sdk::dpp::dashcore::{Address, Network, OutPoint, TxOut, Txid};
@@ -114,18 +114,99 @@ impl AppContext {
             load_system_data_contract(SystemDataContract::KeywordSearch, platform_version)
                 .expect("expected to get keyword search contract");
 
-        let addr = format!(
+        let base_addr = format!(
             "http://{}:{}",
             network_config.core_host, network_config.core_rpc_port
         );
         let cookie_path = core_cookie_path(network, &network_config.devnet_name)
             .expect("expected to get cookie path");
 
-        // Try cookie authentication first
+        // Build a temporary client to list wallets
+        let base_client = match Client::new(&base_addr, Auth::CookieFile(cookie_path.clone())) {
+            Ok(client) => Ok(client),
+            Err(_) => {
+                tracing::info!(
+                    "Failed to authenticate using .cookie file at {:?}, falling back to user/pass",
+                    cookie_path,
+                );
+                Client::new(
+                    &base_addr,
+                    Auth::UserPass(
+                        network_config.core_rpc_user.to_string(),
+                        network_config.core_rpc_password.to_string(),
+                    ),
+                )
+            }
+        }
+        .expect("Failed to create CoreClient");
+
+        let mut network_config = network_config;
+        if network_config.core_wallet_name.is_none() {
+            match base_client.list_wallets() {
+                Ok(wallets) => {
+                    if wallets.is_empty() {
+                        eprintln!(
+                            "No wallets loaded. Please load or create a wallet in Dash Core and restart."
+                        );
+                        return None;
+                    }
+                    let selected = if wallets.len() == 1 {
+                        let w = &wallets[0];
+                        println!("Wallet detected: '{}'. Use this wallet? [y/N]", w);
+                        use std::io::{self, Write};
+                        io::stdout().flush().ok();
+                        let mut input = String::new();
+                        io::stdin().read_line(&mut input).ok();
+                        if input.trim().eq_ignore_ascii_case("y") {
+                            Some(w.clone())
+                        } else {
+                            None
+                        }
+                    } else {
+                        println!("Select wallet:");
+                        for (i, w) in wallets.iter().enumerate() {
+                            println!("  {}: {}", i + 1, w);
+                        }
+                        use std::io::{self, Write};
+                        print!("Enter number: ");
+                        io::stdout().flush().ok();
+                        let mut input = String::new();
+                        io::stdin().read_line(&mut input).ok();
+                        match input.trim().parse::<usize>() {
+                            Ok(idx) if idx > 0 && idx <= wallets.len() => {
+                                Some(wallets[idx - 1].clone())
+                            }
+                            _ => None,
+                        }
+                    };
+
+                    if let Some(w) = selected {
+                        network_config.core_wallet_name = Some(w.clone());
+                        let mut cfg = config.clone();
+                        cfg.update_config_for_network(network, network_config.clone());
+                        let _ = cfg.save();
+                    } else {
+                        eprintln!("No wallet selected. Exiting.");
+                        return None;
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Failed to list wallets: {}", e);
+                    return None;
+                }
+            }
+        }
+
+        let addr = if let Some(ref wallet) = network_config.core_wallet_name {
+            format!("{}/wallet/{}", base_addr, wallet)
+        } else {
+            base_addr.clone()
+        };
+
+        // Final client with wallet path
         let core_client = match Client::new(&addr, Auth::CookieFile(cookie_path.clone())) {
             Ok(client) => Ok(client),
             Err(_) => {
-                // If cookie auth fails, try user/password authentication
                 tracing::info!(
                     "Failed to authenticate using .cookie file at {:?}, falling back to user/pass",
                     cookie_path,
