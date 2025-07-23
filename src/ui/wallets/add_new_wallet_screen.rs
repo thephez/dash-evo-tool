@@ -14,6 +14,7 @@ use dash_sdk::dashcore_rpc::dashcore::bip32::{ChildNumber, DerivationPath};
 use dash_sdk::dashcore_rpc::dashcore::key::Secp256k1;
 use dash_sdk::dpp::dashcore::Network;
 use dash_sdk::dpp::dashcore::bip32::{ExtendedPrivKey, ExtendedPubKey};
+use dash_sdk::dashcore_rpc::RpcApi;
 use eframe::emath::Align;
 use egui::{Color32, ComboBox, Direction, Frame, Grid, Layout, Margin, RichText, Stroke, Ui, Vec2};
 use std::sync::atomic::Ordering;
@@ -56,6 +57,8 @@ pub struct AddNewWalletScreen {
     error: Option<String>,
     pub app_context: Arc<AppContext>,
     use_password_for_app: bool,
+    available_core_wallets: Vec<String>,
+    selected_core_wallet: Option<String>,
 }
 
 impl AddNewWalletScreen {
@@ -72,6 +75,18 @@ impl AddNewWalletScreen {
             error: None,
             app_context: app_context.clone(),
             use_password_for_app: true,
+            available_core_wallets: {
+                match app_context
+                    .core_client
+                    .read()
+                    .expect("Core client lock was poisoned")
+                    .list_wallets()
+                {
+                    Ok(list) => list,
+                    Err(_) => Vec::new(),
+                }
+            },
+            selected_core_wallet: None,
         }
     }
 
@@ -87,6 +102,9 @@ impl AddNewWalletScreen {
 
     fn save_wallet(&mut self) -> Result<AppAction, String> {
         if let Some(mnemonic) = &self.seed_phrase {
+            if self.selected_core_wallet.is_none() {
+                return Err("A Dash Core wallet must be selected".to_string());
+            }
             let seed = mnemonic.to_seed("");
 
             let (encrypted_seed, salt, nonce, uses_password) = if self.password.is_empty() {
@@ -143,6 +161,7 @@ impl AddNewWalletScreen {
                 watched_addresses: Default::default(),
                 unused_asset_locks: Default::default(),
                 alias: Some(self.alias_input.clone()),
+                core_wallet_name: self.selected_core_wallet.clone(),
                 identities: Default::default(),
                 utxos: Default::default(),
                 is_main: true,
@@ -360,7 +379,33 @@ impl ScreenLike for AddNewWalletScreen {
 
                     ui.add_space(20.0);
 
-                    ui.heading("5. Add a password that must be used to unlock the wallet. (Optional but recommended)");
+                    ui.heading("5. Select a Dash Core wallet to link");
+
+                    ui.add_space(8.0);
+                    if self.available_core_wallets.is_empty() {
+                        ui.label("No wallets open in Dash Core. Please open one and restart creation.");
+                    } else {
+                        ComboBox::from_label("Dash Core Wallet")
+                            .selected_text(
+                                self
+                                    .selected_core_wallet
+                                    .clone()
+                                    .unwrap_or_else(|| "Select".to_string()),
+                            )
+                            .show_ui(ui, |ui| {
+                                for name in &self.available_core_wallets {
+                                    ui.selectable_value(
+                                        &mut self.selected_core_wallet,
+                                        Some(name.clone()),
+                                        name,
+                                    );
+                                }
+                            });
+                    }
+
+                    ui.add_space(20.0);
+
+                    ui.heading("6. Add a password that must be used to unlock the wallet. (Optional but recommended)");
 
                     ui.add_space(8.0);
 
@@ -428,7 +473,7 @@ impl ScreenLike for AddNewWalletScreen {
 
                     ui.add_space(20.0);
 
-                    ui.heading("6. Save the wallet.");
+                    ui.heading("7. Save the wallet.");
                     ui.add_space(5.0);
 
                     // Centered "Save Wallet" button at the bottom
